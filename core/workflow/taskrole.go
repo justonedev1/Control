@@ -27,6 +27,7 @@ package workflow
 import (
 	"errors"
 	"strings"
+	"sync/atomic"
 	texttemplate "text/template"
 	"time"
 
@@ -44,8 +45,8 @@ import (
 type taskRole struct {
 	roleBase
 	task.Traits
-	Task          *task.Task `yaml:"-,omitempty"`
-	LoadTaskClass string     `yaml:"-,omitempty"`
+	Task          atomic.Pointer[task.Task] `yaml:"-,omitempty"`
+	LoadTaskClass string                    `yaml:"-,omitempty"`
 }
 
 func (t *taskRole) UnmarshalYAML(unmarshal func(interface{}) error) (err error) {
@@ -262,14 +263,14 @@ func (t *taskRole) updateState(s task.State) {
 }
 
 func (t *taskRole) SetTask(taskPtr *task.Task) {
-	t.Task = taskPtr
+	t.Task.Store(taskPtr)
 	// FIXME: when this is called, properties or vars should be pushed to the task
 }
 
 func (t *taskRole) copy() copyable {
 	rCopy := taskRole{
 		roleBase:      *t.roleBase.copy().(*roleBase),
-		Task:          nil,
+		Task:          atomic.Pointer[task.Task]{},
 		LoadTaskClass: t.LoadTaskClass,
 		Traits:        t.Traits,
 	}
@@ -342,7 +343,7 @@ func (t *taskRole) GetTask() *task.Task {
 	if t == nil {
 		return nil
 	}
-	return t.Task.GetTask()
+	return t.Task.Load().GetTask()
 }
 
 func (t *taskRole) GetTaskClass() string {

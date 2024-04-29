@@ -162,7 +162,7 @@ func LoadDPL(tasks []*taskclass.Class, rootRoleName string, extraVarsMap map[str
 		SingleTaskRole.Connect = append(SingleTaskRole.Connect, taskItem.Connect...)
 		SingleTaskRole.Constraints = append(SingleTaskRole.Constraints, taskItem.Constraints...)
 		SingleTaskRole.Bind = append(SingleTaskRole.Bind, taskItem.Bind...)
-		SingleTaskRole.Task = task.ClassToTask(taskItem, &SingleTaskRole)
+		SingleTaskRole.Task.Store(task.ClassToTask(taskItem, &SingleTaskRole))
 
 		root.aggregator.Roles = append(root.aggregator.Roles, &SingleTaskRole)
 	}
